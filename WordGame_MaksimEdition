@@ -1,0 +1,89 @@
+using System.Collections.Generic; 
+using System; 
+ 
+class HelloWorld 
+{ 
+    static void Main() 
+    { 
+        List<string> wordsUsed = new List<string>(); 
+        string word1 = ""; 
+        Console.WriteLine("Напишите ваше слово, если хотите сдаться пишите 1"); 
+        string word2 = Console.ReadLine(); 
+        wordsUsed.Add(word2); 
+        int lastword = word2.Length - 1; 
+        bool Check = true; 
+        bool Game = true; 
+        if (word2 == "1") 
+        { 
+            Console.WriteLine("Игра окончена"); 
+        } 
+        else 
+        { 
+            while (true) 
+            { 
+                if (!Game) 
+                { 
+                    Console.WriteLine("Очередь игрока 1"); 
+                    word1 = Console.ReadLine(); 
+                    Game = true; 
+                } 
+                else if (Game) 
+                { 
+                    Console.WriteLine("Очередь игрока 2"); 
+                    word1 = Console.ReadLine(); 
+                    Game = false; 
+                } 
+                if (word1 == "1") 
+                { 
+                    Console.WriteLine("Игра окончена"); 
+                    if(!Game)
+                    { 
+                        Console.WriteLine("Победил игрок 1"); 
+                    } 
+                    else 
+                    { 
+                        Console.WriteLine("Победил игрок 2"); 
+                    } 
+                    break; 
+                } 
+                foreach (string word in wordsUsed) 
+                { 
+                    if (word == word1) 
+                    { 
+                        Console.WriteLine("Такое слово уже было"); 
+                        Game = !Game; 
+                        Check = false; 
+                        break; 
+                    } 
+                    else 
+                    { 
+                        Check = true; 
+                    } 
+                } 
+                if (Check == true) 
+                { 
+                    lastword = word2.Length - 1; 
+                    if (word2[lastword] == 'ь' || word2[lastword] == 'ъ') 
+                    { 
+                        lastword = word2.Length - 2; 
+                    } 
+                    else 
+                    { 
+                        lastword = word2.Length - 1; 
+                    } 
+                    if (word1[0] == word2[lastword]) 
+                    { 
+                        word2 = word1; 
+                        Console.WriteLine("Слово подходит"); 
+                        wordsUsed.Add(word1); 
+                    } 
+                    else 
+                    { 
+                        Console.WriteLine("Слово не подходит на последнюю букву"); 
+                        Game = !Game; 
+                    } 
+                } 
+            } 
+        } 
+    } 
+}
