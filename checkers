@@ -1,0 +1,253 @@
+using System;
+
+class Program
+{
+    static char[,] board = new char[8, 8];
+    static char currentPlayer = 'w';
+
+    static void Main(string[] args)
+    {
+        InitializeBoard();
+        DrawBoard();
+
+        while (true)
+        {
+            Console.WriteLine($"{(currentPlayer == 'w' ? "Белые" : "Черные")} ходят.");
+            Console.Write("Введите начальную позицию (y x): ");
+            string[] startInput = Console.ReadLine().Split();
+            int startX = int.Parse(startInput[0]);
+            int startY = int.Parse(startInput[1]);
+
+            Console.Write("Введите конечную позицию (y x): ");
+            string[] endInput = Console.ReadLine().Split();
+            int endX = int.Parse(endInput[0]);
+            int endY = int.Parse(endInput[1]);
+
+            if (IsValidMove(startX, startY, endX, endY))
+            {
+                MakeMove(startX, startY, endX, endY);
+                DrawBoard();
+            }
+            else
+            {
+                Console.WriteLine("Неверный ход. Попробуйте снова.");
+            }
+        }
+    }
+    static void InitializeBoard()
+    {
+        for (int y = 0; y < 8; y++)
+        {
+            for (int x = 0; x < 8; x++)
+            {
+                if ((x + y) % 2 == 1)
+                {
+                    if (y < 3) board[y, x] = 'b';
+                    else if (y > 4) board[y, x] = 'w'; 
+                    else board[y, x] = ' '; 
+                }
+                else
+                {
+                    board[y, x] = ' '; 
+                }
+            }
+        }
+    }
+
+    // Отрисовка доски
+    static void DrawBoard()
+    {
+        Console.WriteLine("   0   1   2   3   4   5   6   7 ");
+        Console.WriteLine("  +---+---+---+---+---+---+---+---+");
+        for (int y = 0; y < 8; y++)
+        {
+            Console.Write($"{y} |");
+            for (int x = 0; x < 8; x++)
+            {
+                Console.Write($" {board[y, x]} |");
+            }
+            Console.WriteLine();
+            Console.WriteLine("  +---+---+---+---+---+---+---+---+");
+        }
+    }
+
+    // Проверка, допустим ли ход
+    static bool IsValidMove(int startX, int startY, int endX, int endY)
+    {
+        if (!IsInsideBoard(startX, startY) || !IsInsideBoard(endX, endY)) return false;
+        if (board[startY, startX] == ' ') return false;
+        if (board[endY, endX] != ' ') return false;
+
+        char piece = board[startY, startX];
+        if ((currentPlayer == 'w' && (piece == 'b' || piece == 'B')) ||
+            (currentPlayer == 'b' && (piece == 'w' || piece == 'W')))
+        {
+            return false;
+        }
+
+        int deltaX = Math.Abs(endX - startX);
+        int deltaY = Math.Abs(endY - startY);
+
+        if (deltaX == 1 && deltaY == 1 && !CanCaptureMultiple(startX, startY, char.IsUpper(piece)))
+        {
+            return true;
+        }
+
+        // Взятие шашки
+        if (deltaX == 2 && deltaY == 2)
+        {
+            int midX = (startX + endX) / 2;
+            int midY = (startY + endY) / 2;
+            if (IsEnemyPiece(midX, midY, currentPlayer))
+            {
+                return true;
+            }
+        }
+
+        // Для дамок: проверка взятия на большем расстоянии
+        if (char.IsUpper(piece) && deltaX == deltaY)
+        {
+            int dirX = Math.Sign(endX - startX);
+            int dirY = Math.Sign(endY - startY);
+            int x = startX + dirX;
+            int y = startY + dirY;
+            bool foundEnemy = false;
+
+            while (x != endX && y != endY)
+            {
+                if (board[y, x] != ' ')
+                {
+                    if (IsEnemyPiece(x, y, currentPlayer) && !foundEnemy)
+                    {
+                        foundEnemy = true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                x += dirX;
+                y += dirY;
+            }
+
+            return foundEnemy;
+        }
+
+        return false;
+    }
+
+    // Проверка взятия нескольких шашек
+    static bool CanCaptureMultiple(int startX, int startY, bool isKing)
+    {
+        int[] dx = { -1, -1, 1, 1 };
+        int[] dy = { -1, 1, -1, 1 };
+
+        for (int i = 0; i < 4; i++)
+        {
+            int newX = startX + 2 * dx[i];
+            int newY = startY + 2 * dy[i];
+
+            if (IsInsideBoard(newX, newY) &&
+                board[startY + dy[i], startX + dx[i]] != ' ' &&
+                IsEnemyPiece(startX + dx[i], startY + dy[i], currentPlayer) &&
+                board[newY, newX] == ' ')
+            {
+                return true;
+            }
+        }
+
+        if (isKing)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                for (int distance = 2; distance < 8; distance++)
+                {
+                    int newX = startX + distance * dx[i];
+                    int newY = startY + distance * dy[i];
+
+                    if (IsInsideBoard(newX, newY) && board[newY, newX] == ' ')
+                    {
+                        int checkX = startX + (distance - 1) * dx[i];
+                        int checkY = startY + (distance - 1) * dy[i];
+
+                        if (IsInsideBoard(checkX, checkY) &&
+                            IsEnemyPiece(checkX, checkY, currentPlayer))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    // Совершение взятия с возможностью рубки нескольких шашек
+    static void Capture(int startX, int startY, int endX, int endY, bool isKing)
+    {
+        int dirX = Math.Sign(endX - startX);
+        int dirY = Math.Sign(endY - startY);
+
+        int x = startX + dirX, y = startY + dirY;
+        while (x != endX && y != endY)
+        {
+            if (IsEnemyPiece(x, y, currentPlayer))
+            {
+                board[y, x] = ' ';
+            }
+            x += dirX;
+            y += dirY;
+        }
+
+        board[endY, endX] = board[startY, startX];
+        board[startY, startX] = ' ';
+
+        if (CanCaptureMultiple(endX, endY, isKing))
+        {
+            Console.WriteLine("Можно рубить еще шашки. Введите новый ход для последовательного взятия.");
+            string[] move = Console.ReadLine().Split();
+            int newEndX = int.Parse(move[0]);
+            int newEndY = int.Parse(move[1]);
+            Capture(endX, endY, newEndX, newEndY, isKing);
+        }
+        else
+        {
+            currentPlayer = currentPlayer == 'w' ? 'b' : 'w';
+        }
+    }
+
+    // Функция для проверки является ли клетка в пределах доски
+    static bool IsInsideBoard(int x, int y)
+    {
+        return x >= 0 && x < 8 && y >= 0 && y < 8;
+    }
+
+    // Проверка является ли фигура в клетке фигурой противника
+    static bool IsEnemyPiece(int x, int y, char player)
+    {
+        char enemy = player == 'w' ? 'b' : 'w';
+        return board[y, x] == enemy || board[y, x] == char.ToUpper(enemy);
+    }
+
+    // Логика выполнения хода
+    static void MakeMove(int startX, int startY, int endX, int endY)
+    {
+        char piece = board[startY, startX];
+        bool isKing = char.IsUpper(piece);
+
+        if (Math.Abs(endX - startX) == 2 && Math.Abs(endY - startY) == 2) 
+        {
+            Capture(startX, startY, endX, endY, isKing);
+        }
+        else 
+        {
+            board[endY, endX] = board[startY, startX];
+            board[startY, startX] = ' ';
+            currentPlayer = currentPlayer == 'w' ? 'b' : 'w';
+        }
+
+        if (endY == 0 && piece == 'w') board[endY, endX] = 'W';
+        if (endY == 7 && piece == 'b') board[endY, endX] = 'B';
+    }
+}
