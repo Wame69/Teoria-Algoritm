@@ -1,0 +1,282 @@
+Тимур:
+using System;
+
+namespace CheckersConsole
+{
+    class Program
+    {
+        // Размер игрового поля
+        const int BOARD_SIZE = 8;
+
+        // Символы для представления клеток
+        const char EMPTY_CELL = ' ';
+        const char BLACK_CHECKER = 'B';
+        const char WHITE_CHECKER = 'W';
+        const char BLACK_KING = 'K';
+        const char WHITE_KING = 'k';
+
+        // Двумерный массив для представления игрового поля
+        static char[,] board = new char[BOARD_SIZE, BOARD_SIZE];
+
+        // Текущий ход
+        static char currentPlayer = BLACK_CHECKER;
+
+        // Метод для инициализации игрового поля
+        static void InitializeBoard()
+        {
+            // Заполнение поля пустыми клетками
+            for (int row = 0; row < BOARD_SIZE; row++)
+            {
+                for (int col = 0; col < BOARD_SIZE; col++)
+                {
+                    board[row, col] = EMPTY_CELL;
+                }
+            }
+
+            // Расстановка черных шашек
+            for (int row = 0; row < 3; row++)
+            {
+                for (int col = 0; col < BOARD_SIZE; col++)
+                {
+                    if ((row + col) % 2 == 1)
+                    {
+                        board[row, col] = BLACK_CHECKER;
+                    }
+                }
+            }
+
+            // Расстановка белых шашек
+            for (int row = BOARD_SIZE - 3; row < BOARD_SIZE; row++)
+            {
+                for (int col = 0; col < BOARD_SIZE; col++)
+                {
+                    if ((row + col) % 2 == 1)
+                    {
+                        board[row, col] = WHITE_CHECKER;
+                    }
+                }
+            }
+        }
+
+        // Метод для вывода игрового поля в консоль
+        static void PrintBoard()
+        {
+            // Вывод заголовка
+            Console.WriteLine("  1 2 3 4 5 6 7 8");
+
+            // Вывод строк
+            for (int row = 0; row < BOARD_SIZE; row++)
+            {
+                Console.Write(row + 1 + " ");
+                for (int col = 0; col < BOARD_SIZE; col++)
+                {
+                    Console.Write(board[row, col] + " ");
+                }
+                Console.WriteLine();
+            }
+        }
+
+        // Метод для получения координат хода от пользователя
+        static void GetMove(out int row, out int col)
+        {
+            // Ввод координат
+            Console.WriteLine("Введите координаты хода (например, 1A):");
+            string input = Console.ReadLine();
+
+            // Проверка ввода
+            if (input.Length != 2)
+            {
+                Console.WriteLine("Неправильный ввод. Повторите попытку.");
+                GetMove(out row, out col);
+                return;
+            }
+
+            // Преобразование координат в индексы массива
+            row = int.Parse(input[0].ToString()) - 1;
+            col = (int)input[1] - (int)'A';
+
+            // Проверка корректности координат
+            if (row < 0  row >= BOARD_SIZE  col < 0 || col >= BOARD_SIZE)
+            {
+                Console.WriteLine("Некорректные координаты. Повторите попытку.");
+                GetMove(out row, out col);
+                return;
+            }
+        }
+
+        // Метод для проверки, является ли ход допустимым
+        static bool IsValidMove(int fromRow, int fromCol, int toRow, int toCol)
+        {
+            // Проверка наличия шашки на исходной клетке
+            if (board[fromRow, fromCol] == EMPTY_CELL)
+            {
+                return false;
+            }
+
+            // Проверка цвета шашки
+            if (board[fromRow, fromCol] != currentPlayer)
+            {
+                return false;
+            }
+
+            // Проверка наличия шашки на конечной клетке
+            if (board[toRow, toCol] != EMPTY_CELL)
+            {
+                return false;
+            }
+
+            // Проверка направления движения
+            int rowDiff = toRow - fromRow;
+            int colDiff = toCol - fromCol;
+
+// Проверка, является ли ход диагональным
+            if (Math.Abs(rowDiff) != Math.Abs(colDiff))
+            {
+                return false;
+            }
+
+            // Проверка, является ли ход нормальным или захватным
+            if (Math.Abs(rowDiff) == 1)
+            {
+                // Нормальный ход
+                return true;
+            }
+            else if (Math.Abs(rowDiff) == 2)
+            {
+                // Захват
+                int middleRow = (fromRow + toRow) / 2;
+                int middleCol = (fromCol + toCol) / 2;
+
+                // Проверка, является ли клетка между шашками не пустой
+                if (board[middleRow, middleCol] != EMPTY_CELL)
+                {
+                    // Проверка, является ли клетка между шашками вражеской
+                    if (currentPlayer == BLACK_CHECKER && (board[middleRow, middleCol] == WHITE_CHECKER  board[middleRow, middleCol] == WHITE_KING) 
+                        currentPlayer == WHITE_CHECKER && (board[middleRow, middleCol] == BLACK_CHECKER || board[middleRow, middleCol] == BLACK_KING))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        // Метод для выполнения хода
+        static void MakeMove(int fromRow, int fromCol, int toRow, int toCol)
+        {
+            // Перемещение шашки
+            board[toRow, toCol] = board[fromRow, fromCol];
+            board[fromRow, fromCol] = EMPTY_CELL;
+
+            // Проверка на превращение в дамку
+            if (currentPlayer == BLACK_CHECKER && toRow == BOARD_SIZE - 1)
+            {
+                board[toRow, toCol] = BLACK_KING;
+            }
+            else if (currentPlayer == WHITE_CHECKER && toRow == 0)
+            {
+                board[toRow, toCol] = WHITE_KING;
+            }
+
+            // Переключение хода
+            if (currentPlayer == BLACK_CHECKER)
+            {
+                currentPlayer = WHITE_CHECKER;
+            }
+            else
+            {
+                currentPlayer = BLACK_CHECKER;
+            }
+        }
+
+        // Метод для проверки конца игры
+        static bool IsGameOver()
+        {
+            // Проверка наличия шашек каждого цвета
+            int blackCount = 0;
+            int whiteCount = 0;
+
+            for (int row = 0; row < BOARD_SIZE; row++)
+            {
+                for (int col = 0; col < BOARD_SIZE; col++)
+                {
+                    if (board[row, col] == BLACK_CHECKER || board[row, col] == BLACK_KING)
+                    {
+                        blackCount++;
+                    }
+                    else if (board[row, col] == WHITE_CHECKER || board[row, col] == WHITE_KING)
+                    {
+                        whiteCount++;
+                    }
+                }
+            }
+
+            // Если у одного из игроков нет шашек, игра окончена
+            if (blackCount == 0 || whiteCount == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        // Метод для объявления победителя
+        static void DeclareWinner()
+        {
+            // Проверка, кто выиграл
+            if (currentPlayer == BLACK_CHECKER)
+            {
+                Console.WriteLine("Белые победили!");
+            }
+            else
+            {
+                Console.WriteLine("Черные победили!");
+            }
+        }
+
+        static void Main(string[] args)
+        {
+            // Инициализация игрового поля
+            InitializeBoard();
+
+            // Цикл игры
+            while (true)
+            {
+                // Вывод игрового поля
+                PrintBoard();
+
+                // Получение хода
+                Console.WriteLine("Ход " + currentPlayer);
+                int fromRow, fromCol, toRow, toCol;
+                Console.Write("Введите координаты начальной клетки: ");
+                GetMove(out fromRow, out fromCol);
+                Console.Write("Введите координаты конечной клетки: ");
+                GetMove(out toRow, out toCol);
+
+// Проверка хода
+                if (IsValidMove(fromRow, fromCol, toRow, toCol))
+                {
+                    // Выполнение хода
+                    MakeMove(fromRow, fromCol, toRow, toCol);
+
+                    // Проверка конца игры
+                    if (IsGameOver())
+                    {
+                        // Объявление победителя
+                        DeclareWinner();
+                        break;
+                    }
+                }
+                else
+                {
+                    // Недопустимый ход
+                    Console.WriteLine("Недопустимый ход. Повторите попытку.");
+                }
+            }
+
+            // Ожидание ввода
+            Console.ReadKey();
+        }
+    }
+}
