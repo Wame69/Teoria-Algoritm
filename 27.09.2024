@@ -1,0 +1,171 @@
+using System;
+using System.Collections.Generic;
+
+namespace Checkers
+{
+    class Program
+    {
+        private static char[,] board = new char[8, 8];
+        private static bool isWhiteTurn = true;
+
+        private static void Main(string[] args)
+        {
+            InitializeBoard();
+
+            while (true)
+            {
+                DisplayBoard();
+
+                if (isWhiteTurn)
+                {
+                    Console.WriteLine("Ход белых:");
+                }
+                else
+                {
+                    Console.WriteLine("Ход черных:");
+                }
+
+                string input = Console.ReadLine();
+                if (input == "выход")
+                {
+                    break;
+                }
+
+                int[] from = ParseMove(input.Substring(0, 2));
+                int[] to = ParseMove(input.Substring(3, 2));
+
+                if (!IsValidMove(from, to))
+                {
+                    Console.WriteLine("Неверный ход. Попробуйте еще раз.");
+                    continue;
+                }
+
+                MakeMove(from, to);
+
+                if (IsGameOver())
+                {
+                    Console.WriteLine("Игра окончена.");
+                    break;
+                }
+
+                isWhiteTurn = !isWhiteTurn;
+            }
+        }
+
+        private static void InitializeBoard()
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = 0; j < 8; j++)
+                {
+                    if ((i + j) % 2 == 0)
+                    {
+                        if (i < 3)
+                        {
+                            board[i, j] = 'W';
+                        }
+                        else if (i > 4)
+                        {
+                            board[i, j] = 'B';
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void DisplayBoard()
+        {
+            Console.WriteLine("  a b c d e f g h");
+            for (int i = 0; i < 8; i++)
+            {
+                Console.Write($"{i + 1} ");
+                for (int j = 0; j < 8; j++)
+                {
+                    Console.Write($"{board[i, j]} ");
+                }
+                Console.WriteLine();
+            }
+        }
+
+        private static int[] ParseMove(string move)
+        {
+            int fromRow = move[0] - 'a';
+            int fromCol = move[1] - '1';
+            return new int[] { fromRow, fromCol };
+        }
+
+        private static bool IsValidMove(int[] from, int[] to)
+        {
+            if (board[from[0], from[1]] == ' ')
+            {
+                return false;
+            }
+
+            if (isWhiteTurn && board[from[0], from[1]] == 'B')
+            {
+                return false;
+            }
+
+            if (!isWhiteTurn && board[from[0], from[1]] == 'W')
+            {
+                return false;
+            }
+
+            int diffRow = to[0] - from[0];
+            int diffCol = to[1] - from[1];
+
+            if (Math.Abs(diffRow) != 1 || Math.Abs(diffCol) != 1)
+            {
+                return false;
+            }
+
+            if (board[to[0], to[1]] != ' ')
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static void MakeMove(int[] from, int[] to)
+        {
+            board[to[0], to[1]] = board[from[0], from[1]];
+            board[from[0], from[1]] = ' ';
+
+            if (isWhiteTurn && to[0] == 0)
+            {
+                board[to[0], to[1]] = 'W';
+            }
+
+            if (!isWhiteTurn && to[0] == 7)
+            {
+                board[to[0], to[1]] = 'B';
+            }
+        }
+
+        private static bool IsGameOver()
+        {
+            bool hasWhitePieces = false;
+            bool hasBlackPieces = false;
+
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = 0; j < 8; j++)
+                {
+                    if (board[i, j] == 'W')
+                    {
+                        hasWhitePieces = true;
+                    }
+
+else if (board[i, j] == 'B')
+                    {
+                        hasBlackPieces = true;
+                    }
+                }
+            }
+
+            return !hasWhitePieces || !hasBlackPieces;
+        }
+    }
+}
+```
