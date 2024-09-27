@@ -1,11 +1,12 @@
 using System;
 
-class CheckersGame
+class Program
 {
     static char[,] board = new char[8, 8];
-    static char currentPlayer = 'w'; 
+    static char currentPlayer = 'w';
+    static (int, int) lastMoveStart = (-1, -1);
+    static bool captureRequired = false;
     static bool multipleCapture = false;
-    static bool mustCapture = false;
 
     static void Main(string[] args)
     {
@@ -15,25 +16,30 @@ class CheckersGame
         while (true)
         {
             Console.WriteLine($"{(currentPlayer == 'w' ? "Белые" : "Черные")} ходят.");
+            Console.WriteLine("Введите \"сдаться\", чтобы прекратить игру.");
 
-            mustCapture = CheckCaptureAvailability(currentPlayer);
-
-            if (mustCapture)
+            if (CheckCaptureAvailability(currentPlayer))
             {
                 Console.WriteLine("У вас есть возможность рубить. Если вы не рубите, шашка сгорит.");
+                captureRequired = true;
+            }
+            else
+            {
+                captureRequired = false;
             }
 
-            Console.Write("Введите 'сдаться', чтобы завершить игру, или начальную позицию (x y): ");
-            string input = Console.ReadLine();
-            if (input.ToLower() == "сдаться")
+            // Сдача
+            Console.Write("Введите начальную позицию (x y) или \"сдаться\": ");
+            string startInput = Console.ReadLine();
+            if (startInput.ToLower() == "сдаться")
             {
                 Console.WriteLine($"{(currentPlayer == 'w' ? "Белые" : "Черные")} сдались. Игра окончена.");
                 break;
             }
 
-            string[] startInput = input.Split();
-            int startX = int.Parse(startInput[0]);
-            int startY = int.Parse(startInput[1]);
+            string[] startCoords = startInput.Split();
+            int startX = int.Parse(startCoords[0]);
+            int startY = int.Parse(startCoords[1]);
 
             Console.Write("Введите конечную позицию (x y): ");
             string[] endInput = Console.ReadLine().Split();
@@ -70,13 +76,14 @@ class CheckersGame
                     multipleCapture = false;
                 }
 
-                if (mustCapture && !CanCapture(startX, startY))
+                if (captureRequired && lastMoveStart != (startX, startY))
                 {
-                    Console.WriteLine("Вы не сделали обязательное взятие. Ваша шашка сгорела.");
+                    Console.WriteLine("Вы не сделали обязательное взятие. Ваша шашка сгорает.");
                     board[startY, startX] = ' ';
+                    captureRequired = false;
                 }
 
-                currentPlayer = currentPlayer == 'w' ? 'b' : 'w'; 
+                currentPlayer = currentPlayer == 'w' ? 'b' : 'w';
             }
             else
             {
@@ -93,13 +100,13 @@ class CheckersGame
             {
                 if ((x + y) % 2 == 1)
                 {
-                    if (y < 3) board[y, x] = 'b'; 
-                    else if (y > 4) board[y, x] = 'w'; 
-                    else board[y, x] = ' '; 
+                    if (y < 3) board[y, x] = 'b';
+                    else if (y > 4) board[y, x] = 'w';
+                    else board[y, x] = ' ';
                 }
                 else
                 {
-                    board[y, x] = ' '; 
+                    board[y, x] = ' ';
                 }
             }
         }
@@ -124,20 +131,20 @@ class CheckersGame
     static bool IsValidMove(int startX, int startY, int endX, int endY)
     {
         if (!IsInsideBoard(startX, startY) || !IsInsideBoard(endX, endY)) return false;
-        if (board[startY, startX] == ' ') return false; 
-        if (board[endY, endX] != ' ') return false; 
+        if (board[startY, startX] == ' ') return false;
+        if (board[endY, endX] != ' ') return false;
 
         char piece = board[startY, startX];
         if ((currentPlayer == 'w' && (piece == 'b' || piece == 'B')) ||
             (currentPlayer == 'b' && (piece == 'w' || piece == 'W')))
         {
-            return false; 
+            return false;
         }
 
         int deltaX = Math.Abs(endX - startX);
         int deltaY = Math.Abs(endY - startY);
 
-        if (deltaX == 1 && deltaY == 1 && !multipleCapture)
+        if (deltaX == 1 && deltaY == 1 && !captureRequired)
         {
             return true;
         }
@@ -152,7 +159,6 @@ class CheckersGame
                 return true;
             }
         }
-
 
         if (char.IsUpper(piece) && deltaX == deltaY)
         {
@@ -189,7 +195,17 @@ class CheckersGame
         return false;
     }
 
-   
+    static bool IsInsideBoard(int x, int y)
+    {
+        return x >= 0 && x < 8 && y >= 0 && y < 8;
+    }
+
+    static bool IsEnemyPiece(int x, int y, char player)
+    {
+        char enemy = player == 'w' ? 'b' : 'w';
+        return board[y, x] == enemy || board[y, x] == char.ToUpper(enemy);
+    }
+
     static bool CheckCaptureAvailability(char player)
     {
         for (int y = 0; y < 8; y++)
@@ -205,7 +221,6 @@ class CheckersGame
         return false;
     }
 
-
     static bool CanCapture(int startX, int startY)
     {
         char piece = board[startY, startX];
@@ -220,60 +235,24 @@ class CheckersGame
             int newY = startY + dy[i];
 
             if (IsInsideBoard(newX, newY) &&
-                IsEnemyPiece((startX + newX) / 2, (startY + newY) / 2, currentPlayer) &&
+                IsEnemyPiece(startX + dx[i] / 2, startY + dy[i] / 2, currentPlayer) &&
                 board[newY, newX] == ' ')
             {
                 return true;
-            }
-
-
-            if (isKing)
-            {
-                int stepX = dx[i] / 2;
-                int stepY = dy[i] / 2;
-                int currentX = startX + stepX;
-                int currentY = startY + stepY;
-
-                while (IsInsideBoard(currentX, currentY) && board[currentY, currentX] == ' ')
-                {
-                    if (IsEnemyPiece(currentX + stepX, currentY + stepY, currentPlayer))
-                    {
-                        return true;
-                    }
-
-                    currentX += stepX;
-                    currentY += stepY;
-                }
             }
         }
 
         return false;
     }
 
-
-    static bool IsEnemyPiece(int x, int y, char player)
-    {
-        if (!IsInsideBoard(x, y)) return false;
-        char target = board[y, x];
-        return (player == 'w' && (target == 'b' || target == 'B')) ||
-               (player == 'b' && (target == 'w' || target == 'W'));
-    }
-
-    static bool IsInsideBoard(int x, int y)
-    {
-        return x >= 0 && x < 8 && y >= 0 && y < 8;
-    }
-
-
     static void MakeMove(int startX, int startY, int endX, int endY)
     {
         char piece = board[startY, startX];
 
-        if (Math.Abs(endX - startX) >= 2 && Math.Abs(endY - startY) >= 2)
+        if (Math.Abs(endX - startX) == 2 && Math.Abs(endY - startY) == 2)
         {
             int midX = (startX + endX) / 2;
             int midY = (startY + endY) / 2;
-
             board[midY, midX] = ' ';
         }
 
@@ -282,5 +261,7 @@ class CheckersGame
 
         if (endY == 0 && piece == 'w') board[endY, endX] = 'W';
         if (endY == 7 && piece == 'b') board[endY, endX] = 'B';
+
+        lastMoveStart = (startX, startY);
     }
 }
