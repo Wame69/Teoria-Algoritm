@@ -3,16 +3,22 @@ using System;
 class Program
 {
     static char[,] board = new char[8, 8];
-    static char currentPlayer = 'w';
+    static char currentPlayer;
     static (int, int) lastMoveStart = (-1, -1);
     static bool captureRequired = false;
     static bool multipleCapture = false;
 
     static void Main(string[] args)
     {
-        InitializeBoard();
+        Console.WriteLine("Выберите режим игры:");
+        Console.WriteLine("1. Обычный режим");
+        Console.WriteLine("2. Белые - 1 дамка, Черные - 5 пешек");
+        int mode = int.Parse(Console.ReadLine());
+
+        InitializeBoard(mode);
         DrawBoard();
 
+        currentPlayer = 'w';
         while (true)
         {
             Console.WriteLine($"{(currentPlayer == 'w' ? "Белые" : "Черные")} ходят.");
@@ -27,6 +33,7 @@ class Program
             {
                 captureRequired = false;
             }
+
             Console.Write("Введите начальную позицию (x y) или \"сдаться\": ");
             string startInput = Console.ReadLine();
             if (startInput.ToLower() == "сдаться")
@@ -90,7 +97,7 @@ class Program
         }
     }
 
-    static void InitializeBoard()
+    static void InitializeBoard(int mode)
     {
         for (int y = 0; y < 8; y++)
         {
@@ -98,9 +105,18 @@ class Program
             {
                 if ((x + y) % 2 == 1)
                 {
-                    if (y < 3) board[y, x] = 'b';
-                    else if (y > 4) board[y, x] = 'w';
-                    else board[y, x] = ' ';
+                    if (mode == 1)
+                    {
+                        if (y < 3) board[y, x] = 'b';
+                        else if (y > 4) board[y, x] = 'w';
+                        else board[y, x] = ' ';
+                    }
+                    else if (mode == 2)
+                    {
+                        if (y == 7 && x == 0) board[y, x] = 'D';
+                        else if (y < 3) board[y, x] = 'b';
+                        else board[y, x] = ' ';
+                    }
                 }
                 else
                 {
@@ -112,6 +128,7 @@ class Program
 
     static void DrawBoard()
     {
+        Console.Clear();
         Console.WriteLine("   0   1   2   3   4   5   6   7 ");
         Console.WriteLine("  +---+---+---+---+---+---+---+---+");
         for (int y = 0; y < 8; y++)
@@ -157,39 +174,48 @@ class Program
             }
         }
 
-        if (char.IsUpper(piece) && deltaX == deltaY)
+        if (char.IsUpper(piece))
         {
-            int dirX = Math.Sign(endX - startX);
-            int dirY = Math.Sign(endY - startY);
-            bool foundEnemy = false;
-
-            int x = startX + dirX;
-            int y = startY + dirY;
-            while (x != endX && y != endY)
-            {
-                if (board[y, x] != ' ')
-                {
-                    if (IsEnemyPiece(x, y, currentPlayer) && !foundEnemy)
-                    {
-                        foundEnemy = true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-                x += dirX;
-                y += dirY;
-            }
-
-            if (foundEnemy)
-            {
-                multipleCapture = true;
-            }
-            return foundEnemy;
+            return IsValidKingMove(startX, startY, endX, endY, piece);
         }
 
         return false;
+    }
+
+    static bool IsValidKingMove(int startX, int startY, int endX, int endY, char piece)
+    {
+        int deltaX = Math.Abs(endX - startX);
+        int deltaY = Math.Abs(endY - startY);
+
+        if (deltaX != deltaY) return false;
+
+        int stepX = (endX > startX) ? 1 : -1;
+        int stepY = (endY > startY) ? 1 : -1;
+
+        int x = startX + stepX;
+        int y = startY + stepY;
+
+        bool foundEnemy = false;
+
+        while (x != endX && y != endY)
+        {
+            if (board[y, x] != ' ')
+            {
+                if (IsEnemyPiece(x, y, currentPlayer))
+                {
+                    if (foundEnemy) return false;
+                    foundEnemy = true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            x += stepX;
+            y += stepY;
+        }
+
+        return foundEnemy;
     }
 
     static bool IsInsideBoard(int x, int y)
@@ -245,19 +271,72 @@ class Program
     {
         char piece = board[startY, startX];
 
-        if (Math.Abs(endX - startX) == 2 && Math.Abs(endY - startY) == 2)
+        int stepX = (endX > startX) ? 1 : -1;
+        int stepY = (endY > startY) ? 1 : -1;
+
+   
+        int x = startX + stepX;
+        int y = startY + stepY;
+
+        bool captured = false;
+
+        while (x != endX && y != endY)
         {
-            int midX = (startX + endX) / 2;
-            int midY = (startY + endY) / 2;
-            board[midY, midX] = ' ';
+            if (board[y, x] != ' ') 
+            {
+                if (IsEnemyPiece(x, y, currentPlayer))
+                {
+                   
+                    board[y, x] = ' ';
+                    captured = true; 
+                }
+                else
+                {
+             
+                    return;
+                }
+            }
+            x += stepX;
+            y += stepY;
         }
 
-        board[endY, endX] = board[startY, startX];
+
+        board[endY, endX] = piece;
         board[startY, startX] = ' ';
+
 
         if (endY == 0 && piece == 'w') board[endY, endX] = 'D';
         if (endY == 7 && piece == 'b') board[endY, endX] = 'B';
 
         lastMoveStart = (startX, startY);
+
+ 
+        if (captured)
+        {
+            while (CanCapture(endX, endY))
+            {
+                Console.WriteLine("Вы можете продолжить рубить. Сделайте следующий ход.");
+                int nextX, nextY;
+            
+                Console.Write("Введите конечную позицию (x y) для следующего взятия: ");
+                string[] nextInput = Console.ReadLine().Split();
+                nextX = int.Parse(nextInput[0]);
+                nextY = int.Parse(nextInput[1]);
+
+             
+                if (IsValidMove(endX, endY, nextX, nextY))
+                {
+       
+                    MakeMove(endX, endY, nextX, nextY);
+                    DrawBoard();
+                    endX = nextX;
+                    endY = nextY;
+                }
+                else
+                {
+                    Console.WriteLine("Неверный ход. Попробуйте снова.");
+                }
+            }
+        }
     }
 }
