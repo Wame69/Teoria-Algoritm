@@ -1,0 +1,94 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+
+class Program
+{
+    static List<string> allCities = new List<string>();
+    static List<string> usedCities = new List<string>();
+    static List<string> players = new List<string>();
+
+    static void Main()
+    {
+        allCities = new List<string>(File.ReadAllLines("file.txt"));
+        Console.WriteLine("Добро пожаловать в 'Города'!");
+        Console.WriteLine("Чтобы завершить игру напишите 'сдаюсь'.");
+
+        int playerCount = 2;
+
+        for (int i = 1; i <= playerCount; i++)
+        {
+            players.Add($"Игрока {i}");
+        }
+
+        string previousCity = "";
+        int currentPlayerIndex = 0;
+
+        while (players.Count > 1)
+        {
+            string currentPlayer = players[currentPlayerIndex];
+            Console.WriteLine($"\nХод {currentPlayer}");
+
+            Console.Write("Введите город: ");
+            string currentCity = Console.ReadLine().Trim();
+
+            if (currentCity.ToLower() == "сдаюсь")
+            {
+                Console.WriteLine($"{currentPlayer} сдался.");
+                players.RemoveAt(currentPlayerIndex);
+
+                if (currentPlayerIndex >= players.Count)
+                {
+                    currentPlayerIndex = 0;
+                }
+            }
+            else if (!IsCityInList(currentCity))
+            {
+                Console.WriteLine("Такого города не существует. Попробуйте снова.");
+            }
+            else if (usedCities.Contains(currentCity.ToLower()))
+            {
+                Console.WriteLine("Этот город уже был назван. Попробуйте другой.");
+            }
+            else if (!IsValidCity(previousCity, currentCity))
+            {
+                Console.WriteLine($"Город должен начинаться с буквы '{GetLastLetter(previousCity)}'. Попробуйте снова.");
+            }
+            else
+            {
+                usedCities.Add(currentCity.ToLower());
+                previousCity = currentCity;
+
+                currentPlayerIndex = (currentPlayerIndex + 1) % players.Count;
+            }
+        }
+
+        Console.WriteLine($"\nПобедил {players[0]}! Игра завершена.");
+    }
+
+
+   
+    static bool IsCityInList(string city)
+    {
+        return allCities.Contains(city, StringComparer.OrdinalIgnoreCase);
+    }
+
+    static bool IsValidCity(string previousCity, string currentCity)
+    {
+        if (string.IsNullOrEmpty(previousCity)) return true;
+        return currentCity[0] == GetLastLetter(previousCity);
+    }
+
+    static char GetLastLetter(string city)
+    {
+        city = city.ToLower();
+        char lastChar = city[city.Length - 1];
+
+        if (lastChar == 'ь' || lastChar == 'ы' || lastChar == 'ъ')
+        {
+            lastChar = city[city.Length - 2];
+        }
+
+        return lastChar;
+    }
+}
