@@ -1,29 +1,54 @@
-List<string> list = new List<string>();
-using (StreamReader sr = new StreamReader(path))
+using System;
+using System.Collections.Generic;
+
+public class CitiesGame
 {
-    string line;
-    while ((line = sr.ReadLine()) != null)
+    static void Main(string[] args)
     {
-        list.Add(line);
+        // Список городов для игры
+        List<string> cities = new List<string>()
+        {
+            "Москва", "Санкт-Петербург", "Новосибирск", "Екатеринбург", "Челябинск", 
+            "Красноярск", "Нижний Новгород", "Казань", "Самара", "Омск",
+            // Добавьте больше городов по мере необходимости
+        };
+
+        // Случайный выбор начального города
+        Random random = new Random();
+        int startingCityIndex = random.Next(cities.Count);
+        string currentCity = cities[startingCityIndex];
+
+        // Информация о ходе игры
+        string currentPlayer = "Игрок 1";
+        bool gameRunning = true;
+
+        // Основной цикл игры
+        while (gameRunning)
+        {
+            Console.WriteLine($"\n{currentPlayer}, ваш ход. Назовите город, начинающийся на букву '{currentCity[currentCity.Length - 1]}':");
+
+            // Ввод города пользователем
+            string playerCity = Console.ReadLine();
+
+            // Проверка правильности ввода
+            if (!cities.Contains(playerCity) || playerCity[0] != currentCity[currentCity.Length - 1])
+            {
+                Console.WriteLine("Неверный ввод! Попробуйте еще раз.");
+                continue;
+            }
+
+            // Переход хода
+            currentCity = playerCity;
+            currentPlayer = (currentPlayer == "Игрок 1") ? "Игрок 2" : "Игрок 1";
+
+            // Проверка на победу
+            if (cities.Count == 1)
+            {
+                Console.WriteLine($"\nПобедил {currentPlayer}!");
+                gameRunning = false;
+            }
+        }
+
+        Console.WriteLine("\nИгра окончена.");
     }
 }
-int a;
-while(true)
-{
-    Console.Write("Введите слово: ");
-    string word = Console.ReadLine();
-    if (word[word.Length-1]=='ь')
-    {
-        a = (list.BinarySearch(Convert.ToString(word[word.Length - 2]))) * (-1);
-    } 
-    else 
-    { 
-        a = (list.BinarySearch(Convert.ToString(word[word.Length - 1]))) * (-1); 
-    }
-
-    Console.WriteLine(list[a]);
-
-    list.RemoveAt(a);
-    list.Remove(word);
-}
-
