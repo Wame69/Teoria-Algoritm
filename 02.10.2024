@@ -34,21 +34,4 @@ public class CitiesGame
             if (!cities.Contains(playerCity) || playerCity[0] != currentCity[currentCity.Length - 1])
             {
                 Console.WriteLine("Неверный ввод! Попробуйте еще раз.");
-                continue;
-            }
-
-            // Переход хода
-            currentCity = playerCity;
-            currentPlayer = (currentPlayer == "Игрок 1") ? "Игрок 2" : "Игрок 1";
-
-            // Проверка на победу
-            if (cities.Count == 1)
-            {
-                Console.WriteLine($"\nПобедил {currentPlayer}!");
-                gameRunning = false;
-            }
-        }
-
-        Console.WriteLine("\nИгра окончена.");
-    }
-}
+ 
