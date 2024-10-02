@@ -1,0 +1,29 @@
+List<string> list = new List<string>();
+using (StreamReader sr = new StreamReader(path))
+{
+    string line;
+    while ((line = sr.ReadLine()) != null)
+    {
+        list.Add(line);
+    }
+}
+int a;
+while(true)
+{
+    Console.Write("Введите слово: ");
+    string word = Console.ReadLine();
+    if (word[word.Length-1]=='ь')
+    {
+        a = (list.BinarySearch(Convert.ToString(word[word.Length - 2]))) * (-1);
+    } 
+    else 
+    { 
+        a = (list.BinarySearch(Convert.ToString(word[word.Length - 1]))) * (-1); 
+    }
+
+    Console.WriteLine(list[a]);
+
+    list.RemoveAt(a);
+    list.Remove(word);
+}
+
