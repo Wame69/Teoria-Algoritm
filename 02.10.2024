@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 class Program
 {
@@ -18,7 +19,7 @@ class Program
 
         for (int i = 1; i <= playerCount; i++)
         {
-            players.Add($"Игрока {i}");
+            players.Add($"Игрок {i}");
         }
 
         string previousCity = "";
@@ -59,15 +60,26 @@ class Program
                 usedCities.Add(currentCity.ToLower());
                 previousCity = currentCity;
 
+                if (AreCitiesExhaustedForLetter(GetLastLetter(previousCity)))
+                {
+                    Console.WriteLine($"Все города на букву '{GetLastLetter(previousCity)}' использованы. Игра завершена.");
+                    break;
+                }
+
                 currentPlayerIndex = (currentPlayerIndex + 1) % players.Count;
             }
         }
 
-        Console.WriteLine($"\nПобедил {players[0]}! Игра завершена.");
+        if (players.Count == 1)
+        {
+            Console.WriteLine($"\nПобедил {players[0]}! Игра завершена.");
+        }
+        else
+        {
+            Console.WriteLine("\nИгра завершена без победителя.");
+        }
     }
 
-
-   
     static bool IsCityInList(string city)
     {
         return allCities.Contains(city, StringComparer.OrdinalIgnoreCase);
@@ -90,5 +102,14 @@ class Program
         }
 
         return lastChar;
+    }
+    static bool AreCitiesExhaustedForLetter(char letter)
+    {
+        var citiesStartingWithLetter = allCities
+            .Where(city => city.StartsWith(letter.ToString(), StringComparison.OrdinalIgnoreCase))
+            .Select(city => city.ToLower())
+            .ToList();
+
+        return citiesStartingWithLetter.All(city => usedCities.Contains(city));
     }
 }
