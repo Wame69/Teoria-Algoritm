@@ -9,10 +9,9 @@ class Program
         Console.WriteLine("Введите свои буковки букавки букоковчки: ");
         string input = Console.ReadLine();
 
-       
         input = new string(input.Where(c => !Char.IsDigit(c)).ToArray());
-
         Dictionary<char, int> lettersCount = new Dictionary<char, int>();
+
         foreach (char c in input)
         {
             if (!lettersCount.ContainsKey(c))
@@ -22,9 +21,10 @@ class Program
         }
 
         List<string> words = new List<string>();
-        GenerateAllWords(input, "", 0, lettersCount, words);
+        GenerateAllWords(input, "", 0, lettersCount, words, 3); 
 
         Console.WriteLine("Вот авши словечки словачки слововувочки:");
+
         if (words.Count > 0)
         {
             foreach (var word in words)
@@ -38,24 +38,27 @@ class Program
         }
     }
 
-    private static void GenerateAllWords(string input, string currentWord, int length, Dictionary<char, int> lettersCount, List<string> words)
+    private static void GenerateAllWords(string input, string currentWord, int length, Dictionary<char, int> lettersCount, List<string> words, int minLength)
     {
-        if (length >= input.Length)
+        
+        if (length >= minLength)
         {
             words.Add(currentWord);
-            return;
         }
 
-        
-        for (int i = 0; i < input.Length && length < input.Length; ++i)
+        for (int i = 0; i < input.Length; ++i)
         {
             char currentChar = input[i];
+
             if (lettersCount.TryGetValue(currentChar, out int count) && count > 0)
             {
                 lettersCount[currentChar]--;
 
-                String newCurrentWord = currentWord + currentChar;
-                GenerateAllWords(input, newCurrentWord, length + 1, lettersCount, words);
+           
+                string newCurrentWord = currentWord + currentChar;
+
+         
+                GenerateAllWords(input, newCurrentWord, length + 1, lettersCount, words, minLength);
 
                 lettersCount[currentChar]++;
             }
