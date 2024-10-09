@@ -4,10 +4,24 @@ using System.Linq;
 
 class Program
 {
+    const string RUSSIAN_ALPHABET = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя";
+    const string ENGLISH_ALPHABET = "abcdefghijklmnopqrstuvwxyz";
+
     static void Main()
     {
-        string input = "ркпуукп"; // Вводимые буквы
+        string input = "рррммпппааа4"; // Вводимые буквы и цифры
         Console.WriteLine("Буквы для использования: " + input);
+
+        // Убираем цифры из строки
+        input = Regex.Replace(input, "[^a-zA-Zа-яА-Я]", "");
+        Console.WriteLine($"Очищенная строка: {input}");
+
+        // Определяем максимальное количество повторений каждой буквы
+        var maxRepeats = new Dictionary<char, int>();
+        foreach (char c in input)
+        {
+            maxRepeats[c] = 1;
+        }
 
         Dictionary<char, int> lettersCount = new Dictionary<char, int>();
         foreach (char c in input)
@@ -19,7 +33,7 @@ class Program
         }
 
         List<string> words = new List<string>();
-        generateWords(input, "", words, lettersCount);
+        generateWords(input, "", words, lettersCount, maxRepeats);
 
         Console.WriteLine("\nСгенерированные слова:");
         foreach (var word in words)
@@ -28,7 +42,7 @@ class Program
         }
     }
 
-    private static void generateWords(string input, string currentWord, List<string> words, Dictionary<char, int> lettersCount)
+    private static void generateWords(string input, string currentWord, List<string> words, Dictionary<char, int> lettersCount, Dictionary<char, int> maxRepeats)
     {
         if (currentWord.Length == input.Length)
         {
@@ -41,10 +55,12 @@ class Program
             char currentChar = input[i];
             if (lettersCount.TryGetValue(currentChar, out int count) && count > 0)
             {
+                if (count > maxRepeats[currentChar]) continue;
+
                 lettersCount[currentChar]--;
                 
                 String newCurrentWord = currentWord + currentChar;
-                generateWords(input, newCurrentWord, words, lettersCount);
+                generateWords(input, newCurrentWord, words, lettersCount, maxRepeats);
                 
                 lettersCount[currentChar]++;
             }
