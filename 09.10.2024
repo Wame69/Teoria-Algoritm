@@ -4,24 +4,19 @@ using System.Linq;
 
 class Program
 {
-    const string RUSSIAN_ALPHABET = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя";
-    const string ENGLISH_ALPHABET = "abcdefghijklmnopqrstuvwxyz";
-
     static void Main()
     {
-        string input = "рррммпппааа4"; // Вводимые буквы и цифры
+        string input = "рррммпппааа"; // Вводимые буквы
         Console.WriteLine("Буквы для использования: " + input);
 
-        // Убираем цифры из строки
-        input = Regex.Replace(input, "[^a-zA-Zа-яА-Я]", "");
-        Console.WriteLine($"Очищенная строка: {input}");
-
         // Определяем максимальное количество повторений каждой буквы
-        var maxRepeats = new Dictionary<char, int>();
-        foreach (char c in input)
+        var maxRepeats = new Dictionary<char, int>()
         {
-            maxRepeats[c] = 1;
-        }
+            {'р', 2},
+            {'м', 2},
+            {'п', 2},
+            {'а', 2}
+        };
 
         Dictionary<char, int> lettersCount = new Dictionary<char, int>();
         foreach (char c in input)
