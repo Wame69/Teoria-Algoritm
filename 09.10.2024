@@ -4,29 +4,37 @@ using System.Linq;
 
 class Program
 {
-    const string RUSSIAN_ALPHABET = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя";
-    const string ENGLISH_ALPHABET = "abcdefghijklmnopqrstuvwxyz";
-
     static void Main()
     {
-        string input = "ркпуукп"; // Вводимые буквы
-        Console.WriteLine("Буквы для использования: " + input);
+        Console.WriteLine("Введите свои буковки букавки букоковчки: ");
+        string input = Console.ReadLine();
+
+       
+        input = new string(input.Where(c => !Char.IsDigit(c)).ToArray());
 
         Dictionary<char, int> lettersCount = new Dictionary<char, int>();
         foreach (char c in input)
         {
             if (!lettersCount.ContainsKey(c))
                 lettersCount[c] = 0;
-            
+
             lettersCount[c]++;
         }
 
-        GenerateAllWords(input, "", 0, lettersCount, new List<string>());
+        List<string> words = new List<string>();
+        GenerateAllWords(input, "", 0, lettersCount, words);
 
-        Console.WriteLine("\nСгенерированные слова:");
-        foreach (var word in words)
+        Console.WriteLine("Вот авши словечки словачки слововувочки:");
+        if (words.Count > 0)
         {
-            Console.WriteLine(word);
+            foreach (var word in words)
+            {
+                Console.WriteLine(word);
+            }
+        }
+        else
+        {
+            Console.WriteLine("Из этих букв невозможно составить слова.");
         }
     }
 
@@ -38,16 +46,17 @@ class Program
             return;
         }
 
-        for (int i = 0; i < input.Length; ++i)
+        
+        for (int i = 0; i < input.Length && length < input.Length; ++i)
         {
             char currentChar = input[i];
             if (lettersCount.TryGetValue(currentChar, out int count) && count > 0)
             {
                 lettersCount[currentChar]--;
-                
+
                 String newCurrentWord = currentWord + currentChar;
                 GenerateAllWords(input, newCurrentWord, length + 1, lettersCount, words);
-                
+
                 lettersCount[currentChar]++;
             }
         }
