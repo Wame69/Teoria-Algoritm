@@ -1,5 +1,6 @@
 using System;
 using System.Text.RegularExpressions;
+using System.Collections.Generic;
 
 namespace MeteorshineToGoodWords
 {
@@ -7,67 +8,73 @@ namespace MeteorshineToGoodWords
     {
         static void Main(string[] args)
         {
-            // Определяем слова-метеоршины и их хорошие аналоги
-            var meteorshineToGoodWords = new Dictionary<string, string>
+            var badWordsToGoodWords = new Dictionary<string, string>
             {
-                { "АФК", "Away From Keyboard" },
-                { "ББ", "Bye Bye" },
-                { "ВБ", "Well Be" },
-                { "ВП", "Welcome Pack" },
-                { "ГГ", "Good Game" },
-                { "ГЛ", "Good Luck" },
-                { "ИМХО", "In My Humble Opinion" },
-                { "ИМЯ", "In My Name" },
-                { "КМ", "Kiss Me" },
-                { "КМК", "Как Мне Кажется" },
-                { "КП", "Ключевая Персона" },
-                { "КТС", "Конец Телефонного Сообщения" },
-                { "ЛМ", "Last Message" },
-                { "МО", "My Own" },
-                { "МТ", "Medical Team" },
-                { "НП", "Не Пиши" },
-                { "ОГ", "Ответьте, Пожалуйста" },
-                { "ОК", "О'кей" },
-                { "ПЖ", "Пожалуйста" },
-                { "ПМ", "Private Message" },
-                { "ПОС", "Приятель, Отзовись, Срочно" },
-                { "РЖУ", "Раскатываюсь Со Смеху" },
-                { "СР", "Sleep Room" },
-                { "ТА", "Total Accepted" },
-                { "ТБ", "Так Будет" },
-                { "ТЧК", "Точка" },
-                { "УЛС", "Улыбайся и Смейся" },
-                { "ФТ", "Full Time" },
-                { "ХЗ", "Хрен Знает" },
-                { "ХМ", "Хм, Задумался" },
-                { "ХТ", "Hot Topic" },
-                { "ЧС", "Часто Сплю" },
-                { "ШП", "Шучу, Пошутил" },
-                { "ЗЗ", "Звездочка" }, // Ловить на лету
+                { "блин", "Вот так" },
+                { "сука", "хороший человек" },
+                { "тварь", "хорошая личность" },
+                { "козел", "Это животное" },
+                { "конченный", "Хороший" },
+                { "дурак", "Умный" },
+                { "идиот", "Ошибающийся" },
+                { "урод", "Необычный" },
+                { "дебил", "Забавный" },
+                { "хрен", "Хорошо" },
+                { "пиздец", "Плохо" },
+                { "жопа", "Задняя часть" },
+                { "еб*ть", "Классный" },
+                { "бля*ь", "Господи" },
+                { "пиз*ец", "Неприятно" },
+                { "зае*ал", "Раздражает" },
+                { "пошел на*уй", "Иди куда хочешь" },
+                { "чмо", "Неудачник" },
+                { "мудак", "Невоспитанный" },
+                { "оху*ть", "Удивительно" },
+                { "е*аный", "Великолепный" },
+                { "на*уй", "Прочь" },
+                { "пи*да", "Нехороший человек" },
+                { "п*здец", "Плохо" },
+                { "блядь", "Дама" },
+                { "говно", "Плохой" },
+                { "долбоеб", "Непонимающий" },
+                { "хуй", "Плохой" },
+                { "шлюха", "Нехороший человек" },
+                
             };
 
-            // создаем регулрное выражение для поиска слов-метеоршин
-            var meteorshineRegex = new Regex(@"\b\w{2,6}\b", RegexOptions.IgnoreCase);
+            
+            var badWordsRegex = new Regex(@"\b\w+\b", RegexOptions.IgnoreCase);
 
-            // вводим строку с текстом, содержащим слова-метеоршины
             Console.WriteLine("Введите текст:");
             string input = Console.ReadLine();
 
-            // Вводим предложения по замене звёздочки
-            Console.WriteLine("Введите предложение для замены звёздочки:");
-            string replaceStarSentence = Console.ReadLine();
-
-            // Заменяем слова-метеоршины на хорошие аналоги
-            input = meteorshineRegex.Replace(input, match =>
+            input = badWordsRegex.Replace(input, match =>
             {
-                string meteorshine = match.Value.ToUpper();
-                return meteorshineToGoodWords.ContainsKey(meteorshine) ? meteorshineToGoodWords[meteorshine] : match.Value;
+                string badWord = match.Value;
+               
+                if (badWordsToGoodWords.ContainsKey(badWord))
+                {
+                    return badWordsToGoodWords[badWord];
+                }
+                else if (badWordsToGoodWords.ContainsKey(badWord.ToUpper()))
+                {
+                    return badWordsToGoodWords[badWord.ToUpper()];
+                }
+                else
+                {
+                    if (badWord.Contains('*'))
+                    {
+                        
+                        string badWordWithoutStars = badWord.Replace("*", "");
+                        if (badWordsToGoodWords.ContainsKey(badWordWithoutStars))
+                        {
+                            return badWordsToGoodWords[badWordWithoutStars];
+                        }
+                    }
+                    return match.Value; 
+                }
             });
 
-            // Замена звёздочки 
-            input = input.Replace("ЗЗ", replaceStarSentence);
-
-            // Выводим результат
             Console.WriteLine("Переделанный текст:");
             Console.WriteLine(input);
         }
