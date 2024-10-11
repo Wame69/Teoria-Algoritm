@@ -34,34 +34,58 @@ namespace Menu
         {
             new Dish("Наггетсы", "Сочные куриные наггетсы.", 140,
                 new List<string> { "Куриное филе", "Панировка", "Масло растительное" },
-                new List<string> { "Глютен", "Соя" }, 250, 120, new List<string> { "Обычный", "Острый" }),
+                new List<string> { "Глютен", "Соя" }, 250, 120, new List<string> { "Обычный"}),
             new Dish("Крылья", "Хрустящие куриные крылья.", 170,
                 new List<string> { "Куриные крылья", "Панировка", "Масло растительное" },
-                new List<string> { "Глютен", "Соя" }, 300, 150, new List<string> { "Обычный", "Острый" }),
+                new List<string> { "Глютен", "Соя" }, 300, 150, new List<string> {"Острый" }),
             new Dish("Чизбургер", "Сочный бургер с говяжьей котлетой, сыром, луком, маринованными огурцами и кетчупом.", 200,
                 new List<string> { "Говяжья котлета", "Сыр", "Лук", "Огурцы маринованные", "Кетчуп", "Булочка" },
-                new List<string> { "Глютен", "Молоко", "Соя" }, 500, 250, new List<string> { "Обычный", "Острый" }),
+                new List<string> { "Глютен", "Молоко", "Соя" }, 500, 250, new List<string> { "Обычный"}),
+             new Dish("Чизбургер", "Сочный бургер с говяжьей котлетой, сыром, луком, маринованными огурцами и кетчупом.", 200,
+                new List<string> { "Говяжья котлета", "Сыр", "Лук", "Огурцы маринованные", "Кетчуп", "Булочка" },
+                new List<string> { "Глютен", "Молоко", "Соя" }, 500, 250, new List<string> {"Острый" }),
             new Dish("Твистер", "Куриное филе, завернутое в лепешку с салатом, помидорами, луком и соусом.", 180,
                 new List<string> { "Куриное филе", "Салат", "Помидоры", "Лук", "Соус", "Лепешка" },
-                new List<string> { "Глютен", "Молоко", "Соя" }, 450, 200, new List<string> { "Обычный", "Острый" }),
+                new List<string> { "Глютен", "Молоко", "Соя" }, 450, 200, new List<string> { "Обычный"}),
+            new Dish("Твистер", "Куриное филе, завернутое в лепешку с салатом, помидорами, луком и соусом.", 180,
+                new List<string> { "Куриное филе", "Салат", "Помидоры", "Лук", "Соус", "Лепешка" },
+                new List<string> { "Глютен", "Молоко", "Соя" }, 450, 200, new List<string> {"Острый" }),
             new Dish("Картошка фри", "Хрустящая картошка фри.", 80,
                 new List<string> { "Картофель", "Масло растительное" },
-                new List<string> { "Крахмал" }, 350, 180, new List<string> { "Обычный", "По-деревенски" }),
+                new List<string> { "Крахмал" }, 350, 180, new List<string> { "Обычный"}),
+            new Dish("Картошка фри", "Хрустящая картошка фри.", 80,
+                new List<string> { "Картофель", "Масло растительное" },
+                new List<string> { "Крахмал" }, 350, 180, new List<string> {"По-деревенски" }),
             new Dish("Coca-Cola", "Классический газированный напиток.", 100,
                 new List<string> { "Вода", "Сахар", "Карамель", "Кофеин" },
-                new List<string> { "Глютен" }, 150, 80, new List<string> { "Без льда", "Со льдом" }),
+                new List<string> { "Глютен" }, 150, 80, new List<string> { "Со льдом" }),
+             new Dish("Coca-Cola", "Классический газированный напиток.", 100,
+                new List<string> { "Вода", "Сахар", "Карамель", "Кофеин" },
+                new List<string> { "Глютен" }, 150, 80, new List<string> { "Без льда"}),
             new Dish("Фанта", "Газированный напиток со вкусом апельсина.", 100,
                 new List<string> { "Вода", "Сахар", "Ароматизаторы", "Кофеин" },
-                new List<string> { "Глютен" }, 150, 80, new List<string> { "Без льда", "Со льдом" }),
+                new List<string> { "Глютен" }, 150, 80, new List<string> { "Без льда" }),
+               new Dish("Фанта", "Газированный напиток со вкусом апельсина.", 100,
+                new List<string> { "Вода", "Сахар", "Ароматизаторы", "Кофеин" },
+                new List<string> { "Глютен" }, 150, 80, new List<string> { "Со льдом" }),
             new Dish("Сандэй", "Вкусный десерт с мороженым, шоколадом и фруктами.", 120,
                 new List<string> { "Мороженое", "Шоколад", "Фрукты" },
-                new List<string> { "Молоко", "Глютен", "Соя" }, 400, 200, new List<string> { "Обычный", "С вишней" }),
+                new List<string> { "Молоко", "Глютен", "Соя" }, 400, 200, new List<string> {"Обычный" }),
+                        new Dish("Сандэй", "Вкусный десерт с мороженым, шоколадом и фруктами.", 120,
+                new List<string> { "Мороженое", "Шоколад", "Фрукты" },
+                new List<string> { "Молоко", "Глютен", "Соя" }, 400, 200, new List<string> { "С вишней" }),
             new Dish("Пирожок с начинкой", "Свежий пирожок с начинкой на выбор.", 50,
                 new List<string> { "Тесто", "Начинка" },
-                new List<string> { "Глютен" }, 300, 150, new List<string> { "С вишней", "С клубникой " }),
+                new List<string> { "Глютен" }, 300, 150, new List<string> {"С вишней"}),
+            new Dish("Пирожок с начинкой", "Свежий пирожок с начинкой на выбор.", 50,
+                new List<string> { "Тесто", "Начинка" },
+                new List<string> { "Глютен" }, 300, 150, new List<string> {"С клубникой" }),
             new Dish("Ролл с креветками", "Вкусненький ролл с морепродуктами креветками", 350,
                 new List<string> { "Креветки", "Салат", "Помидор", "Сыр", "Лепешка" },
-                new List<string> { "Глютен", "Креветки", "Морепродукты" }, 300, 150, new List<string> { "Обычный", "Острый" }),
+                new List<string> { "Глютен", "Креветки", "Морепродукты" }, 300, 150, new List<string> { "Обычный"}),
+             new Dish("Ролл с креветками", "Вкусненький ролл с морепродуктами креветками", 350,
+                new List<string> { "Креветки", "Салат", "Помидор", "Сыр", "Лепешка" },
+                new List<string> { "Глютен", "Креветки", "Морепродукты" }, 300, 150, new List<string> {"Острый" }),
         };
 
         static void Main(string[] args)
@@ -79,7 +103,8 @@ namespace Menu
                 Console.WriteLine("4. По калориям/энергетической ценности");
                 Console.WriteLine("5. Сбросить фильтры");
                 Console.WriteLine("6. Показать блюда до заданной цены");
-                Console.WriteLine("7. Выход");
+                Console.WriteLine("7. По варианту");
+                Console.WriteLine("8. Выход");
 
                 int choice = GetIntInput("Введите номер фильтра: ");
 
@@ -104,6 +129,9 @@ namespace Menu
                         ShowDishesUnderPrice(menu);
                         break;
                     case 7:
+                        filteredMenu = FilterByVariants(menu);
+                        break;
+                    case 8:
                         Console.WriteLine("До свидания!");
                         return;
                     default:
@@ -112,7 +140,14 @@ namespace Menu
                 }
             }
         }
+        static List<Dish> FilterByVariants(List<Dish> dishes)
+        {
+            Console.WriteLine("Выберите вариант блюда");
+            string inputVariant = Console.ReadLine();
+            List<string> variations = inputVariant.Split(',').Select(s => s.Trim()).ToList();
 
+            return dishes.Where(d => d.Variations.Any(i => variations.Contains(i))).ToList();
+        }
         static void PrintMenu(List<Dish> dishes)
         {
             if (dishes.Count == 0)
