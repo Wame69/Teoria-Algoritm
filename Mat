@@ -1,0 +1,54 @@
+using System;
+using System.Collections.Generic;
+
+class Program
+{
+    static void Main()
+    {
+        var badWords = new Dictionary<string, string>
+        {
+            { "Ох...ть", "я порежён" },
+            { "Зае...ли", "простите, вы слишком назойливы" },
+            { "Что за х...ня", "мне кажется, где-то ошибка" },
+            { "Бл...ь", "меня переполняют эмоции" },
+            { "Про...ли", "кажется, мы что-то упустили из виду" },
+            { "Эти пи...ы", "люди нетрадиционной ориентации" },
+            { "Какая на...й разница", "мне не принципиально" },
+            { "Пошел на...й", "не отвлекайте меня, я занят" },
+            { "Расп...й", "ваша мера ответственности оставляет желать лучшего" },
+            { "Ох...ли, что ли", "ваше поведение не соответствует моим ожиданиям" },
+            { "Эта ху...я", "всем известный ненужный предмет" },
+            { "Бл..ха муха", "боже мой" },
+            { "Е.. вашу мать", "вот это да" },
+            { "Еба...уться", "верится с трудом" },
+            { "Еб..ть колотить", "ничего себе(ух ты)" },
+            { "Ни...я", "ничего подобного, вы заблуждаетесь!" }
+        };
+
+        Console.WriteLine("Введите текст:");
+        string userInput = Console.ReadLine();
+        string result = ReplaceBadWords(userInput, badWords);
+
+        Console.WriteLine("Используете вот такое предложение: " + result);
+    }
+
+    static string ReplaceBadWords(string input, Dictionary<string, string> badWords)
+    {
+        foreach (var badWord in badWords)
+        {
+            string replacement = badWord.Value;
+            string badWordLower = badWord.Key.ToLower();
+
+            // Заменяем плохие слова с учетом регистра
+            if (input.StartsWith(badWordLower, StringComparison.OrdinalIgnoreCase))
+            {
+                // Если плохое слово в начале, с заглавной буквы
+                replacement = char.ToUpper(replacement[0]) + replacement.Substring(1);
+            }
+
+            // Заменяем все вхождения
+            input = input.Replace(badWord.Key, replacement, StringComparison.OrdinalIgnoreCase);
+        }
+        return input;
+    }
+}
