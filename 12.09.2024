@@ -2,40 +2,22 @@
 #include <stack>
 
 int main() {
-    // Создаем стек
     std::stack<int> stack;
-
-    // Пример добавления элементов в стек
     stack.push(1);
     stack.push(2);
     stack.push(3);
-
-    // Значение D
     int D = 4;
-    
-    // Добавляем элемент D в стек
     stack.push(D);
-    
-    // Получаем адрес новой вершины стека
-    // Для получения адреса, нам нужно использовать указатели.
-    
-    // Сначала создаем временный массив для хранения элементов стека.
     int* array = new int[stack.size()];
-    std::stack<int> temp_stack = stack; // Копируем стек для доступа к элементам
 
-    // Заполняем массив элементами из стека
+    std::stack<int> temp_stack = stack; 
+
     for (size_t i = 0; i < stack.size(); ++i) {
         array[i] = temp_stack.top();
         temp_stack.pop();
     }
-
-    // Адрес верхнего элемента стека
-    int* P2 = &array[0]; // Адрес первой ячейки массива
-
-    // Выводим адрес новой вершины стека
+    int* P2 = &array[0];
     std::cout << "Адрес новой вершины стека (P2): " << P2 << std::endl;
-
-    // Освобожаем память
     delete[] array;
 
     return 0;
