@@ -1,0 +1,207 @@
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include <iostream>
+#include <vector>
+#include <cmath>
+
+struct Vec3 { float x,y,z; Vec3(float x=0,float y=0,float z=0):x(x),y(y),z(z){} Vec3 operator+(const Vec3&o)const{return Vec3(x+o.x,y+o.y,z+o.z);} Vec3 operator-(const Vec3&o)const{return Vec3(x-o.x,y-o.y,z-o.z);} Vec3 operator*(float s)const{return Vec3(x*s,y*s,z*s);} Vec3 cross(const Vec3&o)const{return Vec3(y*o.z - z*o.y, z*o.x - x*o.z, x*o.y - y*o.x);} Vec3 normalize()const{float l=sqrt(x*x+y*y+z*z); return l>0?(*this)*(1.0f/l):*this;} };
+
+struct Mat4 {
+    float m[16];
+    Mat4(){for(int i=0;i<16;i++) m[i]=0; m[0]=m[5]=m[10]=m[15]=1;}
+    Mat4 operator*(const Mat4&o)const{
+        Mat4 r;
+        for(int row=0;row<4;row++)
+            for(int col=0;col<4;col++){
+                r.m[col+row*4]=0;
+                for(int k=0;k<4;k++) r.m[col+row*4]+=m[k+row*4]*o.m[col+k*4];
+            }
+        return r;
+    }
+};
+
+// ===================== Camera & Car =====================
+Vec3 cameraPos(10,5,10), cameraTarget(0,0,0), cameraUp(0,1,0);
+float zoomLevel=45.0f;
+Vec3 carPos(0,0,0);
+
+// ===================== Input =====================
+void processInput(GLFWwindow* window){
+    float speed=0.03f;
+    if(glfwGetKey(window,GLFW_KEY_ESCAPE)==GLFW_PRESS) glfwSetWindowShouldClose(window,true);
+    if(glfwGetKey(window,GLFW_KEY_UP)==GLFW_PRESS) carPos.z -= speed;
+    if(glfwGetKey(window,GLFW_KEY_DOWN)==GLFW_PRESS) carPos.z += speed;
+    if(glfwGetKey(window,GLFW_KEY_LEFT)==GLFW_PRESS) carPos.x -= speed;
+    if(glfwGetKey(window,GLFW_KEY_RIGHT)==GLFW_PRESS) carPos.x += speed;
+    if(glfwGetKey(window,GLFW_KEY_Q)==GLFW_PRESS) carPos.y += speed;
+    if(glfwGetKey(window,GLFW_KEY_E)==GLFW_PRESS) carPos.y -= speed;
+    if(glfwGetKey(window,GLFW_KEY_Z)==GLFW_PRESS) zoomLevel-=1.0f;
+    if(glfwGetKey(window,GLFW_KEY_X)==GLFW_PRESS) zoomLevel+=1.0f;
+    if(zoomLevel<10) zoomLevel=10; if(zoomLevel>80) zoomLevel=80;
+}
+
+// ===================== Matrices =====================
+Mat4 translate(float x,float y,float z){ Mat4 r; r.m[12]=x; r.m[13]=y; r.m[14]=z; return r; }
+Mat4 scale(float x,float y,float z){ Mat4 r; r.m[0]=x; r.m[5]=y; r.m[10]=z; return r; }
+Mat4 rotate(float angle,Vec3 axis){
+    Mat4 r; float c=cos(angle), s=sin(angle), t=1-c;
+    axis=axis.normalize();
+    r.m[0]=t*axis.x*axis.x+c; r.m[1]=t*axis.x*axis.y - s*axis.z; r.m[2]=t*axis.x*axis.z + s*axis.y;
+    r.m[4]=t*axis.x*axis.y + s*axis.z; r.m[5]=t*axis.y*axis.y + c; r.m[6]=t*axis.y*axis.z - s*axis.x;
+    r.m[8]=t*axis.x*axis.z - s*axis.y; r.m[9]=t*axis.y*axis.z + s*axis.x; r.m[10]=t*axis.z*axis.z+c;
+    return r;
+}
+Mat4 perspective(float fov,float aspect,float near,float far){
+    Mat4 r; float tanHalf=tan(fov*3.14159265f/360.0f);
+    r.m[0]=1.0f/(aspect*tanHalf); r.m[5]=1.0f/tanHalf; r.m[10]=-(far+near)/(far-near); r.m[11]=-1;
+    r.m[14]=-(2*far*near)/(far-near); r.m[15]=0; return r;
+}
+Mat4 lookAt(Vec3 eye, Vec3 center, Vec3 up){
+    Vec3 f=(center-eye).normalize(); Vec3 s=f.cross(up).normalize(); Vec3 u=s.cross(f);
+    Mat4 r;
+    r.m[0]=s.x; r.m[1]=u.x; r.m[2]=-f.x;
+    r.m[4]=s.y; r.m[5]=u.y; r.m[6]=-f.y;
+    r.m[8]=s.z; r.m[9]=u.z; r.m[10]=-f.z;
+    r.m[12]=-s.x*eye.x - s.y*eye.y - s.z*eye.z;
+    r.m[13]=-u.x*eye.x - u.y*eye.y - u.z*eye.z;
+    r.m[14]=f.x*eye.x + f.y*eye.y + f.z*eye.z;
+    return r;
+}
+
+// ===================== Shader =====================
+const char* vertexShaderSource=R"(
+#version 330 core
+layout(location=0) in vec3 aPos;
+layout(location=1) in vec3 aColor;
+out vec3 vertexColor;
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+void main(){ vertexColor=aColor; gl_Position=projection*view*model*vec4(aPos,1.0);}
+)";
+const char* fragmentShaderSource=R"(
+#version 330 core
+in vec3 vertexColor;
+out vec4 FragColor;
+void main(){ FragColor=vec4(vertexColor,1.0);}
+)";
+
+unsigned int compileShader(unsigned int type,const char* src){
+    unsigned int s=glCreateShader(type);
+    glShaderSource(s,1,&src,nullptr); glCompileShader(s);
+    int success; glGetShaderiv(s,GL_COMPILE_STATUS,&success);
+    if(!success){ char info[512]; glGetShaderInfoLog(s,512,nullptr,info); std::cerr<<info<<std::endl; }
+    return s;
+}
+unsigned int createShaderProgram(){
+    unsigned int v=compileShader(GL_VERTEX_SHADER,vertexShaderSource);
+    unsigned int f=compileShader(GL_FRAGMENT_SHADER,fragmentShaderSource);
+    unsigned int p=glCreateProgram(); glAttachShader(p,v); glAttachShader(p,f); glLinkProgram(p);
+    int success; glGetProgramiv(p,GL_LINK_STATUS,&success);
+    if(!success){ char info[512]; glGetProgramInfoLog(p,512,nullptr,info); std::cerr<<info<<std::endl; }
+    glDeleteShader(v); glDeleteShader(f); return p;
+}
+
+// ===================== Mesh =====================
+struct Mesh{
+    std::vector<float> vertices;
+    std::vector<unsigned int> indices;
+    unsigned int VAO,VBO,EBO;
+    void setupMesh(){
+        glGenVertexArrays(1,&VAO); glGenBuffers(1,&VBO); glGenBuffers(1,&EBO);
+        glBindVertexArray(VAO);
+        glBindBuffer(GL_ARRAY_BUFFER,VBO); glBufferData(GL_ARRAY_BUFFER,vertices.size()*sizeof(float),vertices.data(),GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO); glBufferData(GL_ELEMENT_ARRAY_BUFFER,indices.size()*sizeof(unsigned int),indices.data(),GL_STATIC_DRAW);
+        glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6*sizeof(float),(void*)0); glEnableVertexAttribArray(0);
+        glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6*sizeof(float),(void*)(3*sizeof(float))); glEnableVertexAttribArray(1);
+    }
+    void draw(){ glBindVertexArray(VAO); glDrawElements(GL_TRIANGLES,indices.size(),GL_UNSIGNED_INT,0);}
+};
+
+// ===================== Cube =====================
+void pushCube(std::vector<float>& v,std::vector<unsigned int>& i,float w,float h,float d,float cx,float cy,float cz,Vec3 color){
+    float hw=w/2,hh=h/2,hd=d/2;
+    float pos[8][3]={{-hw,-hh,-hd},{hw,-hh,-hd},{hw,hh,-hd},{-hw,hh,-hd},{-hw,-hh,hd},{hw,-hh,hd},{hw,hh,hd},{-hw,hh,hd}};
+    unsigned int inds[36]={0,1,2,2,3,0,4,5,6,6,7,4,0,3,7,7,4,0,1,5,6,6,2,1,3,2,6,6,7,3,0,1,5,5,4,0};
+    unsigned int offset=v.size()/6;
+    for(int p=0;p<8;p++){
+        v.push_back(pos[p][0]+cx); v.push_back(pos[p][1]+cy); v.push_back(pos[p][2]+cz);
+        v.push_back(color.x); v.push_back(color.y); v.push_back(color.z);
+    }
+    for(int p=0;p<36;p++) i.push_back(inds[p]+offset);
+}
+
+// ===================== Cylinder =====================
+void pushCylinder(std::vector<float>& v,std::vector<unsigned int>& i,float radius,float height,float cx,float cy,float cz,int segments,Vec3 color){
+    unsigned int offset=v.size()/6;
+    for(int s=0;s<=segments;s++){
+        float theta=(2.0f*3.14159265f*s)/segments;
+        float x=radius*cos(theta), z=radius*sin(theta);
+        // bottom
+        v.push_back(x+cx); v.push_back(cy-height/2); v.push_back(z+cz); v.push_back(color.x); v.push_back(color.y); v.push_back(color.z);
+        // top
+        v.push_back(x+cx); v.push_back(cy+height/2); v.push_back(z+cz); v.push_back(color.x); v.push_back(color.y); v.push_back(color.z);
+    }
+    for(int s=0;s<segments;s++){
+        int b0=offset+s*2, t0=b0+1, b1=b0+2, t1=b0+3;
+        i.push_back(b0); i.push_back(b1); i.push_back(t1);
+        i.push_back(b0); i.push_back(t1); i.push_back(t0);
+    }
+}
+
+// ===================== Car Mesh =====================
+void createCarMesh(Mesh& car){
+    std::vector<float>& v=car.vertices;
+    std::vector<unsigned int>& i=car.indices;
+    // кузов синий
+    pushCube(v,i,2.0f,0.5f,1.0f,0,0.25f,0,Vec3(0.2f,0.2f,1.0f));
+    // крыша зеленая
+    pushCube(v,i,1.2f,0.3f,0.8f,0,0.75f,0,Vec3(0,1,0));
+    // стекла светло-синие
+    pushCube(v,i,1.0f,0.2f,0.1f,0,0.75f,-0.35f,Vec3(0.5f,0.7f,1.0f));
+    pushCube(v,i,1.0f,0.2f,0.1f,0,0.75f,0.35f,Vec3(0.5f,0.7f,1.0f));
+    pushCube(v,i,0.1f,0.2f,0.6f,-0.55f,0.75f,0,Vec3(0.5f,0.7f,1.0f));
+    pushCube(v,i,0.1f,0.2f,0.6f,0.55f,0.75f,0,Vec3(0.5f,0.7f,1.0f));
+    // колеса черные цилиндры
+    int seg=20;
+    pushCylinder(v,i,0.2f,0.4f,-0.9f,0,-0.5f,seg,Vec3(0,0,0));
+    pushCylinder(v,i,0.2f,0.4f,0.9f,0,-0.5f,seg,Vec3(0,0,0));
+    pushCylinder(v,i,0.2f,0.4f,-0.9f,0,0.5f,seg,Vec3(0,0,0));
+    pushCylinder(v,i,0.2f,0.4f,0.9f,0,0.5f,seg,Vec3(0,0,0));
+}
+
+// ===================== Main =====================
+int main(){
+    if(!glfwInit()){ std::cerr<<"GLFW init failed\n"; return -1;}
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR,3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE,GLFW_OPENGL_CORE_PROFILE);
+    GLFWwindow* window=glfwCreateWindow(1200,800,"3D Car with Round Wheels",nullptr,nullptr);
+    if(!window){ std::cerr<<"Window create failed\n"; glfwTerminate(); return -1;}
+    glfwMakeContextCurrent(window); glewExperimental=GL_TRUE;
+    if(glewInit()!=GLEW_OK){ std::cerr<<"GLEW init failed\n"; return -1;}
+    glEnable(GL_DEPTH_TEST);
+
+    unsigned int shader=createShaderProgram();
+    Mesh car; createCarMesh(car); car.setupMesh();
+
+    while(!glfwWindowShouldClose(window)){
+        processInput(window);
+        glClearColor(0.1f,0.1f,0.2f,1); glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+
+        glUseProgram(shader);
+        Mat4 view=lookAt(cameraPos,cameraTarget,cameraUp);
+        Mat4 projection=perspective(zoomLevel,1200.0f/800.0f,0.1f,100.0f);
+        glUniformMatrix4fv(glGetUniformLocation(shader,"view"),1,GL_FALSE,view.m);
+        glUniformMatrix4fv(glGetUniformLocation(shader,"projection"),1,GL_FALSE,projection.m);
+
+        Mat4 model=translate(carPos.x,carPos.y,carPos.z);
+        glUniformMatrix4fv(glGetUniformLocation(shader,"model"),1,GL_FALSE,model.m);
+
+        car.draw();
+        glfwSwapBuffers(window); glfwPollEvents();
+    }
+
+    glfwDestroyWindow(window); glfwTerminate();
+    return 0;
+}
